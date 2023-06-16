@@ -1,15 +1,13 @@
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class DonutStorage {
-    private int donutsNumber;
+    private final AtomicInteger donutsNumber;
 
     public DonutStorage(int donutsNumber) {
-        this.donutsNumber = donutsNumber;
+        this.donutsNumber = new AtomicInteger(donutsNumber);
     }
 
-    public int getDonutsNumber() {
+    public AtomicInteger getDonutsNumber() {
         return donutsNumber;
-    }
-
-    public void setDonutsNumber(int donutsNumber) {
-        this.donutsNumber = donutsNumber;
     }
 }

@@ -10,6 +10,6 @@ public class Consumer {
      * @param numberOfItemsToConsume Number that will be subtracted from the donutsNumber
      */
     public void consume(int numberOfItemsToConsume) {
-        donutStorage.setDonutsNumber(donutStorage.getDonutsNumber() - numberOfItemsToConsume);
+        donutStorage.getDonutsNumber().addAndGet(-numberOfItemsToConsume);
     }
 }
