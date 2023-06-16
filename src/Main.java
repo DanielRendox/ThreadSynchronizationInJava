@@ -12,7 +12,11 @@ public class Main {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<Future<?>> futures = new ArrayList<>(consumersNumber);
         for (int i = 0; i < consumersNumber; i++) {
-            futures.add(executor.submit(() -> new Consumer(donutStorage).consume(1)));
+            futures.add(executor.submit(() -> {
+                Consumer consumer = new Consumer(donutStorage);
+                System.out.println(Thread.currentThread().getName() + " consumed " +
+                        consumer.consume(3));
+            }));
         }
         executor.shutdown();
 
