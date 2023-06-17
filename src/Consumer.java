@@ -1,5 +1,3 @@
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class Consumer {
     private final DonutStorage donutStorage;
 
@@ -14,15 +12,15 @@ public class Consumer {
      * @return the number of consumed items
      */
     public int consume(int numberOfItemsToConsume) {
-        AtomicInteger donutsNumber = donutStorage.getDonutsNumber();
-        // if there aren't enough donuts in stock, consume as many as there are
-        if (numberOfItemsToConsume > donutsNumber.get()) {
-            int result = donutsNumber.get();
-            donutsNumber.set(0);
-            return result;
+        synchronized (donutStorage) {
+            int donutsNumber = donutStorage.getDonutsNumber();
+            // if there aren't enough donuts in stock, consume as many as there are
+            if (numberOfItemsToConsume > donutsNumber) {
+                donutStorage.setDonutsNumber(0);
+                return donutsNumber;
+            }
+            donutStorage.setDonutsNumber(donutsNumber - numberOfItemsToConsume);
+            return numberOfItemsToConsume;
         }
-
-        donutStorage.getDonutsNumber().addAndGet(-numberOfItemsToConsume);
-        return numberOfItemsToConsume;
     }
 }
