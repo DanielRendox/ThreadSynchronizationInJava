@@ -13,9 +13,9 @@ public class Main {
         List<Future<?>> futures = new ArrayList<>(consumersNumber);
         for (int i = 0; i < consumersNumber; i++) {
             futures.add(executor.submit(() -> {
-                Consumer consumer = new Consumer(donutStorage);
+                Client consumer = new Client(Client.consume, donutStorage);
                 System.out.println(Thread.currentThread().getName() + " consumed " +
-                        consumer.consume(3));
+                        consumer.operate(3));
             }));
         }
         executor.shutdown();
