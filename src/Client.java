@@ -5,28 +5,59 @@
 public class Client {
 
     public static final ClientOperation consume = (donutStorage, numberOfItems) -> {
-        int donutsNumber = donutStorage.getDonutsNumber();
-        // if there aren't enough donuts in stock, consume as many as there are
-        if (numberOfItems > donutsNumber) {
+        if (numberOfItems > donutStorage.getDonutsNumber()) {
+
+            // if there aren't enough donuts in stock, consume as many as there are
+            int numberOfTakenItems = donutStorage.getDonutsNumber();
+            int numberOfItemsToTake = numberOfItems - numberOfTakenItems;
             donutStorage.setDonutsNumber(0);
-            return donutsNumber;
-        }
-        donutStorage.setDonutsNumber(donutsNumber - numberOfItems);
+
+
+            // but wait in case producers put some more items
+            while (numberOfItemsToTake > donutStorage.getDonutsNumber()) {
+                try {
+                    donutStorage.wait();
+                } catch (InterruptedException e) {
+                    System.out.println(Thread.currentThread().getName() +
+                            " was interrupted and didn't consume the desired amount of items.");
+                    return numberOfTakenItems;
+                }
+            }
+            donutStorage.setDonutsNumber(donutStorage.getDonutsNumber() - numberOfItemsToTake);
+        } else donutStorage.setDonutsNumber(donutStorage.getDonutsNumber() - numberOfItems);
+
+        // notify the producers that it's not full anymore as we've just took some items
+        donutStorage.notifyAll();
         return numberOfItems;
     };
 
     public static final ClientOperation produce = (donutStorage, numberOfItems) -> {
-        int donutsNumber = donutStorage.getDonutsNumber();
-        int donutsCapacity = donutStorage.getDonutsCapacity();
+        final int donutsCapacity = donutStorage.getDonutsCapacity();
 
-//         Represents a number of donuts the client can put before the storage
-//         capacity is reached.
-        int availableSpace = donutsCapacity - donutsNumber;
-        if (numberOfItems > availableSpace) {
+        // Represents a number of donuts the client can put before the storage
+        // capacity is reached. We will take exactly this amount of donuts if
+        // there is not enough space.
+        int availableSpace = donutsCapacity - donutStorage.getDonutsNumber();
+
+        // Number of items the producer hasn't put yet
+        int numberOfItemsToPut = numberOfItems - availableSpace;
+
+        if (numberOfItems > (availableSpace)) {
             donutStorage.setDonutsNumber(donutsCapacity);
-            return availableSpace;
-        }
-        donutStorage.setDonutsNumber(donutsNumber + numberOfItems);
+
+            while (numberOfItems > (donutsCapacity - donutStorage.getDonutsNumber())) {
+                try {
+                    donutStorage.wait();
+                } catch (InterruptedException e) {
+                    System.out.println(Thread.currentThread().getName() +
+                            " was interrupted and didn't produce the desired amount of items.");
+                    return availableSpace;
+                }
+            }
+            donutStorage.setDonutsNumber(donutStorage.getDonutsNumber() + numberOfItemsToPut);
+        } else donutStorage.setDonutsNumber(donutStorage.getDonutsNumber() + numberOfItems);
+        // notify the consumers that it's not empty anymore as we've just took some items
+        donutStorage.notifyAll();
         return numberOfItems;
     };
 
