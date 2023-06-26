@@ -8,14 +8,22 @@ import java.util.concurrent.Future;
 public class Main {
     public static void main(String[] args) {
         int consumersNumber = 10;
+        int producersNumber = 5;
         DonutStorage donutStorage = new DonutStorage(20);
-        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ExecutorService executor = Executors.newFixedThreadPool(consumersNumber+producersNumber);
         List<Future<?>> futures = new ArrayList<>(consumersNumber);
         for (int i = 0; i < consumersNumber; i++) {
             futures.add(executor.submit(() -> {
                 Client consumer = new Client(Client.consume, donutStorage);
                 System.out.println(Thread.currentThread().getName() + " consumed " +
-                        consumer.operate(3));
+                        consumer.operate(10));
+            }));
+        }
+        for (int i = 0; i < producersNumber; i++) {
+            futures.add(executor.submit(() -> {
+                Client producer = new Client(Client.produce, donutStorage);
+                System.out.println(Thread.currentThread().getName() + " produced " +
+                        producer.operate(10));
             }));
         }
         executor.shutdown();
@@ -30,6 +38,6 @@ public class Main {
             }
         }
 
-        System.out.println("Number of remaining donuts: " + donutStorage.getDonutsNumber());
+        System.out.println("Number of remaining donuts: " + donutStorage.blockingQueue.size());
     }
 }

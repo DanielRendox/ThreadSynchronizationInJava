@@ -1,33 +1,34 @@
+import java.util.concurrent.TimeUnit;
+
 /**
  * Client is meant to be a producer or consumer. Each client has access to the
  * DonutStorage does the respective action with donuts.
  */
 public class Client {
-
     public static final ClientOperation consume = (donutStorage, numberOfItems) -> {
-        int donutsNumber = donutStorage.getDonutsNumber();
-        // if there aren't enough donuts in stock, consume as many as there are
-        if (numberOfItems > donutsNumber) {
-            donutStorage.setDonutsNumber(0);
-            return donutsNumber;
+        int numberOfConsumedItems = 0;
+        for (int i = 0; i < numberOfItems; i++) {
+            try {
+                if (donutStorage.blockingQueue.poll(1, TimeUnit.SECONDS) != null) {
+                    numberOfConsumedItems++;
+                }
+            } catch (InterruptedException ignored) {
+            }
         }
-        donutStorage.setDonutsNumber(donutsNumber - numberOfItems);
-        return numberOfItems;
+        return numberOfConsumedItems;
     };
 
     public static final ClientOperation produce = (donutStorage, numberOfItems) -> {
-        int donutsNumber = donutStorage.getDonutsNumber();
-        int donutsCapacity = donutStorage.getDonutsCapacity();
-
-//         Represents a number of donuts the client can put before the storage
-//         capacity is reached.
-        int availableSpace = donutsCapacity - donutsNumber;
-        if (numberOfItems > availableSpace) {
-            donutStorage.setDonutsNumber(donutsCapacity);
-            return availableSpace;
+        int numberOfProducedItems = 0;
+        for (int i = 0; i < numberOfItems; i++) {
+            try {
+                if (donutStorage.blockingQueue.offer(new Object(), 1, TimeUnit.SECONDS)) {
+                    numberOfProducedItems++;
+                }
+            } catch (InterruptedException ignored) {
+            }
         }
-        donutStorage.setDonutsNumber(donutsNumber + numberOfItems);
-        return numberOfItems;
+        return numberOfProducedItems;
     };
 
     private final ClientOperation clientOperation;
@@ -44,9 +45,7 @@ public class Client {
      * @return  number that represents how the donutsNumber was changed
      */
     public int operate(int numberOfItems) {
-        synchronized (donutStorage) {
-            return clientOperation.operate(donutStorage, numberOfItems);
-        }
+        return clientOperation.operate(donutStorage, numberOfItems);
     }
 
     @FunctionalInterface
