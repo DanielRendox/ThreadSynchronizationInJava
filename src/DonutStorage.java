@@ -1,12 +1,12 @@
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 public class DonutStorage {
-    private int donutsNumber;
+    public BlockingQueue<Object> blockingQueue;
     public DonutStorage(int donutsNumber) {
-        this.donutsNumber = donutsNumber;
-    }
-    public int getDonutsNumber() {
-        return donutsNumber;
-    }
-    public void setDonutsNumber(int donutsNumber) {
-        this.donutsNumber = donutsNumber;
+        blockingQueue = new ArrayBlockingQueue<>(50);
+        for (int i = 0; i < donutsNumber; i++) {
+            blockingQueue.add(new Object());
+        }
     }
 }
